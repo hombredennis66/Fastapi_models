@@ -63,4 +63,5 @@ pytest
 このプロジェクトはオープンソースです。コントリビューション、Issueの報告、フォークを歓迎します。
 
 ---
-*Created by Jules*
+*Created by Jules & hombredennis66
+
