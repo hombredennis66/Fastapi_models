@@ -28,6 +28,7 @@ llm_service = None
 async def lifespan(app: FastAPI):
     """Lifespan event to load models on startup and clean up on shutdown."""
     global llm_service
+    
     # Load ML model
     try:
         if not MODEL_PATH.exists():
@@ -39,13 +40,20 @@ async def lifespan(app: FastAPI):
         models["iris_model"] = None
 
     # Load LLM Service
-    llm_service = LLMService()
+    try:
+        llm_service = LLMService()
+        logger.info("LLM service initialized successfully")
+    except Exception as e:
+        logger.error(f"Error initializing LLM service: {e}")
+        llm_service = None
     
-    yield # The app runs while in this state
+    yield  # The app runs while in this state
     
     # Clean up when the server shuts down
     models.clear()
-    logger.info("Models unloaded securely.")
+    if llm_service:
+        llm_service.shutdown()
+    logger.info("Models and services unloaded securely.")
 
 # Initialize FastAPI app with lifespan
 app = FastAPI(
@@ -58,7 +66,7 @@ app = FastAPI(
 # Add CORS Middleware for frontend security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Change "*" to your specific frontend URL in production!
+    allow_origins=["*"],  # Change "*" to your specific frontend URL in production!
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -71,9 +79,10 @@ app.add_middleware(GZIPMiddleware, minimum_size=1000)
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 
-# --- Pydantic Models (Unchanged, they were perfect!) ---
+# --- Pydantic Models ---
 
 class PredictionInput(BaseModel):
+    """Input model for iris flower prediction."""
     features: List[float] = Field(
         ..., min_items=4, max_items=4,
         description="List of 4 float values representing iris flower features"
@@ -86,6 +95,7 @@ class PredictionInput(BaseModel):
         return v
 
 class BatchPredictionInput(BaseModel):
+    """Input model for batch predictions."""
     features_list: List[List[float]] = Field(
         ..., min_items=1, max_items=1000,
         description="List of feature arrays (max 1000 samples)"
@@ -101,6 +111,7 @@ class BatchPredictionInput(BaseModel):
         return v
 
 class SentimentInput(BaseModel):
+    """Input model for sentiment analysis."""
     text: str = Field(
         ..., min_length=1, max_length=5000,
         description="Text to analyze for sentiment (max 5000 characters)"
@@ -110,13 +121,26 @@ class SentimentInput(BaseModel):
 
 @app.get("/", tags=["Health"])
 async def root():
+    """Health check endpoint."""
     return {"message": "Welcome to the ML and LLM API", "version": "2.0.0"}
 
 @app.post("/predict", tags=["ML"])
 @limiter.limit("100/minute")
 async def predict(request: Request, input_data: PredictionInput):
+    """Predict iris flower class from features.
+    
+    Args:
+        input_data: PredictionInput containing 4 float features
+        
+    Returns:
+        Prediction result with class index (0, 1, or 2)
+        
+    Raises:
+        HTTPException: If model is not loaded or prediction fails
+    """
     ml_model = models.get("iris_model")
     if ml_model is None:
+        logger.error("ML model not available")
         raise HTTPException(status_code=500, detail="ML model not loaded")
 
     try:
@@ -141,8 +165,20 @@ async def predict(request: Request, input_data: PredictionInput):
 @app.post("/predict-batch", tags=["ML"])
 @limiter.limit("50/minute")
 async def predict_batch(request: Request, input_data: BatchPredictionInput):
+    """Batch predict iris flower classes.
+    
+    Args:
+        input_data: BatchPredictionInput containing list of feature arrays
+        
+    Returns:
+        List of predictions with confidences
+        
+    Raises:
+        HTTPException: If model is not loaded or prediction fails
+    """
     ml_model = models.get("iris_model")
     if ml_model is None:
+        logger.error("ML model not available")
         raise HTTPException(status_code=500, detail="ML model not loaded")
 
     try:
@@ -168,9 +204,24 @@ async def predict_batch(request: Request, input_data: BatchPredictionInput):
 @app.post("/sentiment", tags=["LLM"])
 @limiter.limit("200/minute")
 async def sentiment(request: Request, input_data: SentimentInput):
+    """Analyze sentiment of input text.
+    
+    Args:
+        input_data: SentimentInput containing text to analyze
+        
+    Returns:
+        Sentiment analysis result with label and score
+        
+    Raises:
+        HTTPException: If sentiment analysis fails
+    """
+    if llm_service is None:
+        logger.error("LLM service not available")
+        raise HTTPException(status_code=500, detail="LLM service not initialized")
+    
     try:
-        # Assuming llm_service is also synchronous, run it in a threadpool!
-        result = await run_in_threadpool(llm_service.analyze_sentiment, input_data.text)
+        # Use async method to keep event loop responsive
+        result = await llm_service.analyze_sentiment_async(input_data.text)
         logger.info(f"Sentiment analysis: {result['label']}")
         return result
     except Exception as e:
@@ -179,4 +230,5 @@ async def sentiment(request: Request, input_data: SentimentInput):
 
 if __name__ == "__main__":
     import uvicorn
+    # Bind to localhost only - change to 0.0.0.0 only if behind a reverse proxy
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
