@@ -1,3 +1,5 @@
+"""ML model training script with validation and security checks."""
+
 import logging
 from pathlib import Path
 from sklearn.datasets import load_iris
@@ -42,4 +44,5 @@ def train_model() -> None:
         logger.error(f"An error occurred during model training/saving: {e}")
 
 if __name__ == "__main__":
-    train_model()
+    success = train_model()
+    exit(0 if success else 1)
