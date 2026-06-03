@@ -1,6 +1,12 @@
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
-from main import app
+
+# Mock the LLM service at the module level to avoid any network calls during import or test execution
+with patch("llm_service.LLMService.analyze_sentiment") as mock_sentiment:
+    # Set a default return value for the mock
+    mock_sentiment.return_value = {"label": "POSITIVE", "score": 0.99}
+    from main import app
 
 client = TestClient(app)
 
@@ -18,18 +24,24 @@ def test_predict_endpoint():
     assert isinstance(response.json()["prediction"], int)
 
 def test_sentiment_endpoint():
-    payload = {"text": "I really enjoy learning about artificial intelligence."}
-    response = client.post("/sentiment", json=payload)
-    assert response.status_code == 200
-    data = response.json()
-    assert "label" in data
-    assert "score" in data
-    assert data["label"] == "POSITIVE"
+    with patch("main.llm_service.analyze_sentiment") as mock_sentiment:
+        mock_sentiment.return_value = {"label": "POSITIVE", "score": 0.999}
+        payload = {"text": "I really enjoy learning about artificial intelligence."}
+        response = client.post("/sentiment", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert "label" in data
+        assert "score" in data
+        assert data["label"] == "POSITIVE"
+        mock_sentiment.assert_called_once_with(payload["text"])
 
 def test_sentiment_negative_endpoint():
-    payload = {"text": "I am so sad today."}
-    response = client.post("/sentiment", json=payload)
-    assert response.status_code == 200
-    data = response.json()
-    assert "label" in data
-    assert data["label"] == "NEGATIVE"
+    with patch("main.llm_service.analyze_sentiment") as mock_sentiment:
+        mock_sentiment.return_value = {"label": "NEGATIVE", "score": 0.999}
+        payload = {"text": "I am so sad today."}
+        response = client.post("/sentiment", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert "label" in data
+        assert data["label"] == "NEGATIVE"
+        mock_sentiment.assert_called_once_with(payload["text"])
