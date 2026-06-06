@@ -1,11 +1,16 @@
+from functools import cached_property, lru_cache
 from transformers import pipeline
 
 class LLMService:
-    def __init__(self):
+    @cached_property
+    def classifier(self):
         # Using a small, efficient model for sentiment analysis
-        self.classifier = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+        # Lazy loading the pipeline to improve startup time
+        return pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 
+    @lru_cache(maxsize=128)
     def analyze_sentiment(self, text: str):
+        # Caching results for identical text inputs to avoid redundant inference
         result = self.classifier(text)
         return result[0]
 
