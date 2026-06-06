@@ -40,8 +40,9 @@ async def predict(input_data: PredictionInput):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/sentiment")
-async def sentiment(input_data: SentimentInput):
+def sentiment(input_data: SentimentInput):
     try:
+        # Running sync def to allow FastAPI to handle CPU-bound tasks in a thread pool
         result = llm_service.analyze_sentiment(input_data.text)
         return result
     except Exception as e:
