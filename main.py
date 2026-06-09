@@ -28,7 +28,7 @@ async def root():
     return {"message": "Welcome to the ML and LLM API"}
 
 @app.post("/predict")
-async def predict(input_data: PredictionInput):
+def predict(input_data: PredictionInput):
     if ml_model is None:
         raise HTTPException(status_code=500, detail="ML model not loaded")
 
@@ -40,7 +40,7 @@ async def predict(input_data: PredictionInput):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/sentiment")
-async def sentiment(input_data: SentimentInput):
+def sentiment(input_data: SentimentInput):
     try:
         result = llm_service.analyze_sentiment(input_data.text)
         return result
