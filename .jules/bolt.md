@@ -5,3 +5,7 @@
 ## 2026-06-09 - [Lazy Loading Transformers]
 **Learning:** Top-level imports of heavy ML libraries like `transformers` can add seconds to the application startup time. In this environment, it accounted for over 70% of the cold-start duration.
 **Action:** Move heavy library imports inside the specific methods or properties that use them to ensure they are only loaded when necessary.
+
+## 2026-06-10 - [Lazy Loading Scikit-learn Models]
+**Learning:** Loading Scikit-learn models using `joblib` at the module level significantly impacts startup time even when using lightweight libraries like `numpy`. Refactoring these into a lazy-loaded service using `cached_property` and moving imports to local scope reduced startup time by ~66% in this environment.
+**Action:** Use `cached_property` and local imports for any module-level I/O or heavy model unpickling to ensure rapid application readiness.
