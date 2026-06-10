@@ -1,10 +1,10 @@
-from transformers import pipeline
 from functools import cached_property, lru_cache
 
 class LLMService:
     @cached_property
     def classifier(self):
-        # Lazy load the pipeline to improve startup time
+        # Lazy load transformers and the pipeline to improve startup time
+        from transformers import pipeline
         return pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 
     @lru_cache(maxsize=128)
