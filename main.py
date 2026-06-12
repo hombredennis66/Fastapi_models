@@ -1,21 +1,14 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import joblib
-import numpy as np
 from llm_service import LLMService
+from ml_service import MLService
 from typing import List
 
 app = FastAPI(title="ML and LLM API")
 
-# Load ML model
-try:
-    ml_model = joblib.load('model.joblib')
-except Exception as e:
-    print(f"Error loading ML model: {e}")
-    ml_model = None
-
-# Initialize LLM service
+# Initialize services
 llm_service = LLMService()
+ml_service = MLService()
 
 class PredictionInput(BaseModel):
     features: List[float]
@@ -29,13 +22,13 @@ async def root():
 
 @app.post("/predict")
 def predict(input_data: PredictionInput):
-    if ml_model is None:
-        raise HTTPException(status_code=500, detail="ML model not loaded")
-
     try:
-        features = np.array(input_data.features).reshape(1, -1)
-        prediction = ml_model.predict(features)
-        return {"prediction": int(prediction[0])}
+        prediction = ml_service.predict(input_data.features)
+        if prediction is None:
+            raise HTTPException(status_code=500, detail="ML model not loaded")
+        return {"prediction": prediction}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
