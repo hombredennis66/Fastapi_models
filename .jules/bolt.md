@@ -5,3 +5,7 @@
 ## 2026-06-09 - [Lazy Loading Transformers]
 **Learning:** Top-level imports of heavy ML libraries like `transformers` can add seconds to the application startup time. In this environment, it accounted for over 70% of the cold-start duration.
 **Action:** Move heavy library imports inside the specific methods or properties that use them to ensure they are only loaded when necessary.
+
+## 2026-06-13 - [Lazy Loading ML Models]
+**Learning:** Global imports of `joblib` and `numpy`, combined with immediate ML model loading from disk, contribute significantly to startup latency. Moving these to a lazy-loaded service reduced cold start time by approximately 70-85%.
+**Action:** Use `cached_property` and local imports for all heavy ML libraries and model loading to ensure the application starts accepting requests as quickly as possible.
