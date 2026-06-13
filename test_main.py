@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from main import app
+from unittest.mock import patch
 
 client = TestClient(app)
 
@@ -17,7 +18,9 @@ def test_predict_endpoint():
     assert "prediction" in response.json()
     assert isinstance(response.json()["prediction"], int)
 
-def test_sentiment_endpoint():
+@patch("llm_service.LLMService.analyze_sentiment")
+def test_sentiment_endpoint(mock_analyze):
+    mock_analyze.return_value = {"label": "POSITIVE", "score": 0.99}
     payload = {"text": "I really enjoy learning about artificial intelligence."}
     response = client.post("/sentiment", json=payload)
     assert response.status_code == 200
@@ -26,7 +29,9 @@ def test_sentiment_endpoint():
     assert "score" in data
     assert data["label"] == "POSITIVE"
 
-def test_sentiment_negative_endpoint():
+@patch("llm_service.LLMService.analyze_sentiment")
+def test_sentiment_negative_endpoint(mock_analyze):
+    mock_analyze.return_value = {"label": "NEGATIVE", "score": 0.99}
     payload = {"text": "I am so sad today."}
     response = client.post("/sentiment", json=payload)
     assert response.status_code == 200
