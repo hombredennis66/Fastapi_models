@@ -5,3 +5,7 @@
 ## 2026-06-09 - [Lazy Loading Transformers]
 **Learning:** Top-level imports of heavy ML libraries like `transformers` can add seconds to the application startup time. In this environment, it accounted for over 70% of the cold-start duration.
 **Action:** Move heavy library imports inside the specific methods or properties that use them to ensure they are only loaded when necessary.
+
+## 2026-06-10 - [Lazy Loading Scikit-learn & NumPy]
+**Learning:** Top-level imports of `numpy` and `joblib` plus loading a serialized model file (`.joblib`) during FastAPI startup adds significant overhead (e.g., ~3 seconds). Refactoring this into a service with `cached_property` and local imports deferred the cost until the first request.
+**Action:** Move all heavy ML model loading and their dependencies into lazy-loaded properties to ensure near-instant application startup.
