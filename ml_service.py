@@ -1,4 +1,4 @@
-from functools import cached_property
+from functools import cached_property, lru_cache
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,12 +15,18 @@ class MLService:
             logger.error(f"Error loading ML model: {e}")
             return None
 
-    def predict(self, features_list):
-        """Perform prediction using the lazy-loaded model."""
-        if self.model is None:
-            raise RuntimeError("ML model could not be loaded")
+    @cached_property
+    def _cached_predict(self):
+        """Internal cached prediction function to avoid self-reference in lru_cache."""
+        @lru_cache(maxsize=128)
+        def _predict(features_tuple):
+            if self.model is None:
+                raise RuntimeError("ML model could not be loaded")
+            # Optimization: pass [features_tuple] directly to avoid numpy overhead
+            prediction = self.model.predict([features_tuple])
+            return int(prediction[0])
+        return _predict
 
-        import numpy as np
-        features = np.array(features_list).reshape(1, -1)
-        prediction = self.model.predict(features)
-        return int(prediction[0])
+    def predict(self, features_list):
+        """Perform prediction using the lazy-loaded model and cache results."""
+        return self._cached_predict(tuple(features_list))
