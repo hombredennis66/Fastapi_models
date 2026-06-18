@@ -9,3 +9,7 @@
 ## 2026-06-10 - [Lazy Loading Scikit-learn & NumPy]
 **Learning:** Top-level imports of `numpy` and `joblib` plus loading a serialized model file (`.joblib`) during FastAPI startup adds significant overhead (e.g., ~3 seconds). Refactoring this into a service with `cached_property` and local imports deferred the cost until the first request.
 **Action:** Move all heavy ML model loading and their dependencies into lazy-loaded properties to ensure near-instant application startup.
+
+## 2026-06-11 - [ML Prediction Caching & NumPy Overhead Removal]
+**Learning:** For ML models serving single-sample predictions (common in real-time APIs), `numpy` array allocation and reshaping can be a significant portion of the total latency. Furthermore, implementing an `lru_cache` for repeated requests provides a massive speedup (~300x). Using a `cached_property` to return a decorated function avoids memory leaks and the unhashable `self` issue in standard `lru_cache` on instance methods.
+**Action:** Optimize single-sample ML predictions by passing data directly in expected shapes (e.g., list of tuples) and use per-instance caching for frequent identical inputs.
