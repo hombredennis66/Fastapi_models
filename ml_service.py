@@ -1,4 +1,4 @@
-from functools import cached_property
+from functools import cached_property, lru_cache
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,12 +15,22 @@ class MLService:
             logger.error(f"Error loading ML model: {e}")
             return None
 
+    @cached_property
+    def _cached_predict(self):
+        """Per-instance cache for predictions to avoid memory leaks and handle 'self'."""
+        @lru_cache(maxsize=128)
+        def _predict(features_tuple):
+            # Scikit-learn models can accept a list of sequences (like a list of tuples).
+            # This avoids numpy array creation and reshaping overhead in the hot path.
+            prediction = self.model.predict([features_tuple])
+            return int(prediction[0])
+        return _predict
+
     def predict(self, features_list):
-        """Perform prediction using the lazy-loaded model."""
+        """Perform prediction using the lazy-loaded model and an LRU cache."""
         if self.model is None:
             raise RuntimeError("ML model could not be loaded")
 
-        import numpy as np
-        features = np.array(features_list).reshape(1, -1)
-        prediction = self.model.predict(features)
-        return int(prediction[0])
+        # Convert list to tuple to ensure it is hashable for the lru_cache.
+        features_tuple = tuple(features_list)
+        return self._cached_predict(features_tuple)
