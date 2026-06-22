@@ -1,4 +1,4 @@
-from functools import cached_property
+from functools import cached_property, lru_cache
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,12 +15,22 @@ class MLService:
             logger.error(f"Error loading ML model: {e}")
             return None
 
+    @cached_property
+    def _cached_predict(self):
+        """Internal cached prediction function to avoid instance-level lru_cache issues."""
+        @lru_cache(maxsize=128)
+        def predict_func(features_tuple):
+            # scikit-learn models can accept a list of tuples/lists directly,
+            # bypassing the need for numpy array creation for single samples.
+            prediction = self.model.predict([features_tuple])
+            return int(prediction[0])
+        return predict_func
+
     def predict(self, features_list):
-        """Perform prediction using the lazy-loaded model."""
+        """Perform prediction using the lazy-loaded model with caching."""
         if self.model is None:
             raise RuntimeError("ML model could not be loaded")
 
-        import numpy as np
-        features = np.array(features_list).reshape(1, -1)
-        prediction = self.model.predict(features)
-        return int(prediction[0])
+        # Convert to tuple for hashability in lru_cache
+        features_tuple = tuple(features_list)
+        return self._cached_predict(features_tuple)
