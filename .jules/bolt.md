@@ -13,3 +13,7 @@
 ## 2026-06-11 - [ML Prediction Path Optimization]
 **Learning:** For low-latency ML services, the overhead of creating NumPy arrays and importing NumPy in the hot path can be significant (~10% of execution time for simple models). Furthermore, instance-level caching using `lru_cache` inside a `cached_property` provides massive speedups for repeated requests without the memory risks of global caches or unhashable `self` issues.
 **Action:** Use `tuple` conversion and per-instance `lru_cache` for numerical feature caching. Pass lists directly to scikit-learn's `predict` to avoid unnecessary NumPy allocations in the hot path.
+
+## 2026-06-12 - [LLM Pipeline Caching & Truncation]
+**Learning:** Using `@lru_cache` on instance methods leads to memory leaks and hashability issues. Combining `@cached_property` for the heavy pipeline object with an internal cached function for results ensures both fast loading and efficient inference without reloading the model. Enabling `truncation=True` is critical for robustness against long inputs.
+**Action:** Use the per-instance caching pattern (cached property returning an inner decorated function) for all model inference services. Always enable truncation for LLM pipelines unless full context is strictly required.

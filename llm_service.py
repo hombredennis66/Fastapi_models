@@ -1,17 +1,43 @@
-from functools import cached_property, lru_cache
+import functools
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class LLMService:
-    @cached_property
+    @functools.cached_property
     def classifier(self):
-        # Lazy load transformers and the pipeline to improve startup time
-        from transformers import pipeline
-        return pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+        """Lazy load the sentiment analysis pipeline with truncation enabled."""
+        try:
+            # Local import to speed up initial service instantiation
+            from transformers import pipeline
+            logger.info("Loading sentiment-analysis pipeline...")
+            # DistilBERT is used for efficient inference.
+            # truncation=True ensures inputs > 512 tokens are handled without error.
+            return pipeline(
+                "sentiment-analysis",
+                model="distilbert-base-uncased-finetuned-sst-2-english",
+                truncation=True
+            )
+        except Exception as e:
+            logger.error(f"Failed to load LLM pipeline: {e}")
+            raise RuntimeError(f"Could not initialize LLM classifier: {e}")
 
-    @lru_cache(maxsize=128)
+    @functools.cached_property
+    def _cached_analyze_sentiment(self):
+        """Internal cached function to provide per-instance result caching."""
+        @functools.lru_cache(maxsize=128)
+        def _analyze(text: str):
+            # Accessing self.classifier triggers the lazy loading (if not already loaded)
+            # and returns the pipeline object which is then called.
+            result = self.classifier(text)
+            return result[0]
+        return _analyze
+
     def analyze_sentiment(self, text: str):
-        # Cache results to speed up repeated requests with the same text
-        result = self.classifier(text)
-        return result[0]
+        """Analyze text sentiment with per-instance caching and automatic truncation."""
+        return self._cached_analyze_sentiment(text)
 
 if __name__ == "__main__":
     service = LLMService()
