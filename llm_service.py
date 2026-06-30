@@ -8,18 +8,26 @@ logger = logging.getLogger(__name__)
 class LLMService:
     @functools.cached_property
     def classifier(self):
-        """Lazy load the sentiment analysis pipeline with truncation enabled."""
+        """Lazy load the sentiment analysis pipeline with truncation and 8-bit quantization."""
         try:
             # Local import to speed up initial service instantiation
             from transformers import pipeline
+            import torch
             logger.info("Loading sentiment-analysis pipeline...")
             # DistilBERT is used for efficient inference.
             # truncation=True ensures inputs > 512 tokens are handled without error.
-            return pipeline(
+            pipe = pipeline(
                 "sentiment-analysis",
                 model="distilbert-base-uncased-finetuned-sst-2-english",
                 truncation=True
             )
+
+            # Apply 8-bit dynamic quantization to linear layers for faster CPU inference
+            pipe.model = torch.quantization.quantize_dynamic(
+                pipe.model, {torch.nn.Linear}, dtype=torch.qint8
+            )
+
+            return pipe
         except Exception as e:
             logger.error(f"Failed to load LLM pipeline: {e}")
             raise RuntimeError(f"Could not initialize LLM classifier: {e}")
