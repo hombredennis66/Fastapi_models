@@ -12,14 +12,21 @@ class LLMService:
         try:
             # Local import to speed up initial service instantiation
             from transformers import pipeline
+            import torch
             logger.info("Loading sentiment-analysis pipeline...")
             # DistilBERT is used for efficient inference.
             # truncation=True ensures inputs > 512 tokens are handled without error.
-            return pipeline(
+            nlp = pipeline(
                 "sentiment-analysis",
                 model="distilbert-base-uncased-finetuned-sst-2-english",
                 truncation=True
             )
+            # Apply 8-bit dynamic quantization to linear layers for CPU speedup
+            logger.info("Applying dynamic quantization to the LLM model...")
+            nlp.model = torch.quantization.quantize_dynamic(
+                nlp.model, {torch.nn.Linear}, dtype=torch.qint8
+            )
+            return nlp
         except Exception as e:
             logger.error(f"Failed to load LLM pipeline: {e}")
             raise RuntimeError(f"Could not initialize LLM classifier: {e}")
