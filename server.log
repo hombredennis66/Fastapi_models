@@ -1,0 +1,48 @@
+INFO:     Started server process [7813]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:llm_service:Loading sentiment-analysis pipeline...
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/agent-harnesses "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/config.json "HTTP/1.1 200 OK"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+Loading weights:   0%|          | 0/104 [00:00<?, ?it/s]Loading weights: 100%|██████████| 104/104 [00:00<00:00, 1929.31it/s]
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/distilbert-base-uncased-finetuned-sst-2-english/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/distilbert/distilbert-base-uncased-finetuned-sst-2-english/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/distilbert-base-uncased-finetuned-sst-2-english/tree/main?recursive=true&expand=false "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/distilbert/distilbert-base-uncased-finetuned-sst-2-english/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/vocab.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/vocab.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/tokenizer.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/added_tokens.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/special_tokens_map.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43790 - "POST /sentiment HTTP/1.1" 200 OK
