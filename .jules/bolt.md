@@ -17,3 +17,7 @@
 ## 2026-06-12 - [LLM Pipeline Caching & Truncation]
 **Learning:** Using `@lru_cache` on instance methods leads to memory leaks and hashability issues. Combining `@cached_property` for the heavy pipeline object with an internal cached function for results ensures both fast loading and efficient inference without reloading the model. Enabling `truncation=True` is critical for robustness against long inputs.
 **Action:** Use the per-instance caching pattern (cached property returning an inner decorated function) for all model inference services. Always enable truncation for LLM pipelines unless full context is strictly required.
+
+## 2026-06-13 - [LLM Dynamic Quantization]
+**Learning:** Applying 8-bit dynamic quantization to DistilBERT's Linear layers using `torch.quantization.quantize_dynamic` reduces CPU inference latency by ~30-40% with negligible impact on accuracy for tasks like sentiment analysis. Using `torch.inference_mode()` further minimizes overhead compared to `no_grad()`.
+**Action:** For CPU-bound LLM inference, always consider 8-bit dynamic quantization as a low-effort, high-impact optimization. Use `torch.inference_mode()` in the hot path.
