@@ -8,18 +8,28 @@ logger = logging.getLogger(__name__)
 class LLMService:
     @functools.cached_property
     def classifier(self):
-        """Lazy load the sentiment analysis pipeline with truncation enabled."""
+        """Lazy load and optimize the sentiment analysis pipeline."""
         try:
-            # Local import to speed up initial service instantiation
+            # Local imports to speed up initial service instantiation
             from transformers import pipeline
+            import torch
+
             logger.info("Loading sentiment-analysis pipeline...")
             # DistilBERT is used for efficient inference.
             # truncation=True ensures inputs > 512 tokens are handled without error.
-            return pipeline(
+            pipe = pipeline(
                 "sentiment-analysis",
                 model="distilbert-base-uncased-finetuned-sst-2-english",
                 truncation=True
             )
+
+            # Apply 8-bit dynamic quantization to the model for faster CPU inference.
+            # This reduces model size and speeds up matrix multiplications on CPU.
+            pipe.model = torch.quantization.quantize_dynamic(
+                pipe.model, {torch.nn.Linear}, dtype=torch.qint8
+            )
+
+            return pipe
         except Exception as e:
             logger.error(f"Failed to load LLM pipeline: {e}")
             raise RuntimeError(f"Could not initialize LLM classifier: {e}")
@@ -27,16 +37,19 @@ class LLMService:
     @functools.cached_property
     def _cached_analyze_sentiment(self):
         """Internal cached function to provide per-instance result caching."""
+        import torch
+
         @functools.lru_cache(maxsize=128)
         def _analyze(text: str):
-            # Accessing self.classifier triggers the lazy loading (if not already loaded)
-            # and returns the pipeline object which is then called.
-            result = self.classifier(text)
+            # Use torch.inference_mode for minimal overhead during prediction.
+            # It disables gradient calculation and other training-related features.
+            with torch.inference_mode():
+                result = self.classifier(text)
             return result[0]
         return _analyze
 
     def analyze_sentiment(self, text: str):
-        """Analyze text sentiment with per-instance caching and automatic truncation."""
+        """Analyze text sentiment with per-instance caching and optimized inference."""
         return self._cached_analyze_sentiment(text)
 
 if __name__ == "__main__":
